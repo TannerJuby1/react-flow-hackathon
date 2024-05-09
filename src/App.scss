@@ -1,0 +1,14 @@
+.side-bar {
+    width: 75%;
+    border-left: 3px solid black;
+    .header {
+      h2, p {
+        text-align: center;
+      }
+    }
+    .team-details {
+      h4 {
+        text-align: center;
+      }
+    }
+}
