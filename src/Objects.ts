@@ -21,7 +21,7 @@ export const denverNuggets: SportsBallTeam = {
     },
     {
       name: 'Championship Status',
-      options: ['', 'What\'s a Championship?', 'Lose Miserably', 'Kneecap the Avalanche in the parking lot before game', 'Won Honorably', 'Lose Miserably, and kneecap the Avalance in the parking lot after the game and steal the cup.'],
+      options: ['', 'What\'s a Championship?', 'Lose Miserably', 'Kneecap the Avalanche in the parking lot before game', 'Won Honorably', 'Lose Miserably, and kneecap the Avalanche in the parking lot after the game and steal the cup.'],
       current: ''
     }
   ]
@@ -93,8 +93,8 @@ export const qualifyForPlayoffs: SportsBallPhase = {
 
 export const takeHomeStanleyCup: SportsBallPhase = {
   nodeType: 'SportsBallPhase',
-  label: 'Drink from the Stanley Cup',
-  details: 'Take home the Sacred Stanley Cup and Drink from Beer from it. Truly, the ends justify the means.',
+  label: 'Stanley Cup Finals',
+  details: 'Play to take home the Sacred Stanley Cup and drink beer from it. Truly, the ends justify the means.',
   minConditionsToMeet: 1,
   conditions: [
     {

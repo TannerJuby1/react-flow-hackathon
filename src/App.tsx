@@ -1,10 +1,9 @@
-import type { Node, OnConnect } from "reactflow";
+import type {OnConnect, ReactFlowInstance} from "reactflow";
 
 import { useCallback, useEffect, useState } from "react";
 import {
   Background,
   Controls,
-  MiniMap,
   ReactFlow,
   addEdge,
   useNodesState,
@@ -18,7 +17,7 @@ import './App.scss'
 
 import { nodeTypes, phaseNodes } from "./nodes";
 import { initialEdges, edgeTypes } from "./edges";
-import { Sport, SportsBallPhase, SportsBallTeam } from "./SportsBallTypes";
+import { SportsBallPhase, SportsBallTeam } from "./SportsBallTypes";
 import { Button, FormLabel, FormSelect } from "react-bootstrap";
 import ConfettiExplosion from "react-confetti-explosion";
 
@@ -36,6 +35,8 @@ export default function App() {
   const [team, setTeam] = useState<SportsBallTeam>() 
 
   const [explodeConfetti, setExplodeConfetti] = useState(false)
+
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance>()
 
   useEffect(() => {
     // Update Current Team Phase Index and Team
@@ -56,6 +57,14 @@ export default function App() {
     setActiveNode(activeNode)
   }, [nodes])
 
+  useEffect(()=> {
+
+    setTimeout(()=> {
+      reactFlowInstance?.fitView()
+      console.log("ACTIVE NODE: ", activeNode)
+    }, 200)
+  }, [activeNode])
+
   useEffect(() => {
     if (!team) {
       setTeam(nodes[currentTeamPhaseIndex].data.team)
@@ -71,7 +80,7 @@ export default function App() {
 
   useEffect(() => {
     if (team) {
-      let newNodes = [...nodes]
+      const newNodes = [...nodes]
       newNodes[currentTeamPhaseIndex].data.team = team
       setNodes(newNodes)
     }
@@ -90,7 +99,7 @@ export default function App() {
   }
 
   const moveToNextPhase = () => {
-    let newNodes = [...nodes]
+    const newNodes = [...nodes]
 
     // Move Team next Phase if there is one
     if (currentTeamPhaseIndex < nodes.length - 1) {
@@ -114,7 +123,7 @@ export default function App() {
     const teamReadyForNextPhase = conditionsMet >= minConditionsToMeet
 
     return (
-      <div className="d-flex flex-column justify-content-between gap-4 h-100 p-5">
+      <div className="d-flex flex-column justify-content-between gap-4 h-100 p-5 overflow-y-scroll">
         <div className="header">
           <h2>{activeNode?.label}</h2>
           <p>{activeNode?.details}</p>
@@ -122,42 +131,54 @@ export default function App() {
         <hr />
         {activeNode?.team && (
           <div className="team-details">
-            <h4 className="">{activeNode.team.name}</h4>
+            <div className={'d-flex flex-column align-items-center gap-2'}>
+              <img
+                style={{width: '100px'}}
+                src={'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flogodownload.org%2Fwp-content%2Fuploads%2F2021%2F07%2Fdenver-nuggets-logo-5.png&f=1&nofb=1&ipt=4c2ec485083022cfca3052ea379e85feafa85e7b280f13778ba4efd34ffc8642&ipo=images'}
+              />
+              <h4 className="">{activeNode.team.name}</h4>
+            </div>
+
             <div className="d-flex flex-column gap-3">
-            {
-              team?.attributes.map((attribute, i) => {
-                return (
-                  <div>
-                    <FormLabel>{attribute.name}</FormLabel>
-                    <FormSelect value={attribute.current} disabled={currentTeamPhaseIndex !== i} onChange={({ target: { value } }) => {
-                      handleAttributeChange(i, value)
-                    }}>
-                      {attribute.options.map(option => 
-                        <option value={option}>{option}</option>
-                      )}
-                    </FormSelect>
-                  </div>
-                )
-              })
-            }
+              {
+                team?.attributes.map((attribute, i) => {
+                  return (
+                    <div>
+                      <FormLabel>{attribute.name}</FormLabel>
+                      <FormSelect value={attribute.current} disabled={currentTeamPhaseIndex !== i}
+                                  onChange={({target: {value}}) => {
+                                    handleAttributeChange(i, value)
+                                  }}>
+                        {attribute.options.map(option =>
+                          <option value={option}>{option}</option>
+                        )}
+                      </FormSelect>
+                    </div>
+                  )
+                })
+              }
             </div>
           </div>
         )}
-        <hr />
-        <div className="conditions">
-          <p>Options to Qualify for Next Phase</p>
-          <ul>
-            {activeNode?.conditions?.map(condition => {
-              const isCompleteString = `[${condition.achieved(activeNode.team)}]`
-              return (
-                <li>{isCompleteString} {condition.label}</li>
-              )
-            })}
-          </ul>
-          <Button onClick={moveToNextPhase} className="w-100" disabled={!teamReadyForNextPhase}>
-            Promote {activeNode?.team?.name} to next Phase
-          </Button>
-        </div>
+        {currentTeamPhaseIndex !== nodes.length - 1 && (
+          <>
+            <hr/>
+            <div className="conditions">
+              <p>Options to Qualify for Next Phase</p>
+              <ul>
+                {activeNode?.conditions?.map(condition => {
+                  const isCompleteString = `[${condition.achieved(activeNode.team)}]`
+                  return (
+                    <li>{isCompleteString} {condition.label}</li>
+                  )
+                })}
+              </ul>
+              <Button onClick={moveToNextPhase} className="w-100 progress-button" disabled={!teamReadyForNextPhase}>
+                Promote {activeNode?.team?.name} to next Phase
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
     )
@@ -168,23 +189,29 @@ export default function App() {
       <div className="d-flex justify-content-center">
         {explodeConfetti && <ConfettiExplosion force={0.8} duration={5000} particleCount={500} width={2400}/>}
       </div>
-      <div className="d-flex w-100 h-100">
-        <ReactFlow
-          nodes={[...nodes]}
-          nodeTypes={nodeTypes}
-          onNodesChange={onNodesChange}
-          edges={edges}
-          edgeTypes={edgeTypes}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          fitView
-        >
-          <Background />
-          <Controls />
-        </ReactFlow>
-        {activeNode && <div className='side-bar'>
-          {renderSideBar()}
-        </div>}
+      <div className={'d-flex flex-column h-100'}>
+        <div className={'text-center p-3 sticky-top title'}>
+          <h1>Nuggets' Path to Drinking from the Stanley Cup</h1>
+        </div>
+        <div className="d-flex w-100 h-100 overflow-hidden">
+          <ReactFlow
+            nodes={[...nodes]}
+            nodeTypes={nodeTypes}
+            onNodesChange={onNodesChange}
+            edges={edges}
+            edgeTypes={edgeTypes}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onInit={(instance) => setReactFlowInstance(instance)}
+            fitView
+          >
+            <Background />
+            <Controls />
+          </ReactFlow>
+          {activeNode && <div className='side-bar'>
+            {renderSideBar()}
+          </div>}
+        </div>
       </div>
     </>
   );
